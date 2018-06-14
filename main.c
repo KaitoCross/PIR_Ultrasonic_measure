@@ -118,7 +118,7 @@ void p3_thread2(struct argsForpthread * demArgs)
         sec = ende.tv_sec - start.tv_sec;
         usec = ende.tv_usec - start.tv_usec;
         double totaldiff = (double)sec + (double)usec/1000;
-        demArgs->distance = ((double)sec + (double)usec/1000)*34300/2;
+        demArgs->distance = (totaldiff*34300)/2;
         semaphore_operation(WUNLOCK);
         printf("DISTANCE MEASURED!\n");
     }
