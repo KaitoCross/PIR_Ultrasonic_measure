@@ -73,16 +73,12 @@ void p3_thread1(struct argsForpthread *demArgs)
     {
         semaphore_operation(WLOCK);
         printf("THREAD1 LOCK\n");
-        if (digitalRead(READ_PIR) == 1)
-        {
-        demArgs->detectedMove=1;
-        printf("MOVEMENT DETECTED\n");
-        semaphore_operation(WUNLOCK);
-        }
-        else
-        {
+        while (digitalRead(READ_PIR) != 1) {
             demArgs->detectedMove=0;
         }
+        demArgs->detectedMove=1;
+        semaphore_operation(WUNLOCK);
+        printf("MOVEMENT DETECTED\n");
     }
 }
 
