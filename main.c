@@ -79,7 +79,7 @@ void p3_thread1(struct argsForpthread *demArgs)
         demArgs->detectedMove=1;
         semaphore_operation(semid,WUNLOCK);
         printf("MOVEMENT DETECTED\n");
-        sleep(1);
+        delay(1);
     }
 }
 
@@ -208,7 +208,7 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    sleep(30);
+    sleep(15);
     demArgs.alive=0;
     pthread_join(readPIR,NULL);
     pthread_join(calcDist,NULL);
