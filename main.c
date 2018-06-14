@@ -64,11 +64,12 @@ struct argsForpthread
     double distance;
     short evaluationDone;
     short detectedMove;
+    short alive;
 };
 
 void p3_thread1(struct argsForpthread *demArgs)
 {
-    while(1)
+    while(demArgs->alive)
     {
         semaphore_operation(WLOCK);
         if (digitalRead(READ_PIR) == 1)
@@ -86,11 +87,11 @@ void p3_thread1(struct argsForpthread *demArgs)
 
 void p3_thread2(struct argsForpthread * demArgs)
 {
-    semaphore_operation(WLOCK);
     struct timeval start, ende;
     long sec, usec;
-    while(1)
+    while(demArgs->alive)
     {
+        semaphore_operation(WLOCK);
         digitalWrite(TRIGGER_USO,1);
         delay(10);
         digitalWrite(TRIGGER_USO,0);
@@ -126,7 +127,7 @@ void p3_thread2(struct argsForpthread * demArgs)
 
 void p3_thread3(struct argsForpthread *demArgs)
 {
-    while(1) {
+    while(demArgs->alive) {
         semaphore_operation(LOCK);
         digitalWrite(GREEN, 0);
         digitalWrite(YELLOW, 0);
@@ -150,7 +151,7 @@ void p3_thread3(struct argsForpthread *demArgs)
 
 void p3_thread4(struct argsForpthread *demArgs)
 {
-    while(1)
+    while(demArgs->alive)
     {
         semaphore_operation(LOCK);
         if(demArgs->distance < 10.0)
@@ -170,6 +171,7 @@ int main() {
     demArgs.distance=0.0;
     demArgs.detectedMove=0;
     demArgs.evaluationDone=0;
+    demArgs.alive=1;
     int res;
     res = init_semaphore (2,KEY);
     if (res < 0) {
@@ -205,7 +207,8 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    sleep(10);
+    sleep(30);
+    demArgs.alive=0;
     pthread_join(readPIR,NULL);
     pthread_join(calcDist,NULL);
     pthread_join(doSound,NULL);
