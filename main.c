@@ -104,19 +104,19 @@ long sec, usec;
     }
 }
 
-void p3_thread1(struct argsForpthread demArgs)
+void p3_thread1(struct argsForpthread *demArgs)
 {
 while(1)
 {
     semaphore_operation(WLOCK);
     if (digitalRead(READ_PIR) == 1)
     {
-    demArgs.detectedMove=1;
+    demArgs->detectedMove=1;
     semaphore_operation(WUNLOCK);
     }
     else
     {
-        demArgs.detectedMove=0;
+        demArgs->detectedMove=0;
     }
 }
 }
