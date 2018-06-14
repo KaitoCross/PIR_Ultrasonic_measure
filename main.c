@@ -119,8 +119,8 @@ void p3_thread2(struct argsForpthread * demArgs)
         usec = ende.tv_usec - start.tv_usec;
         double totaldiff = (double)sec + (double)usec/1000;
         demArgs->distance = ((double)sec + (double)usec/1000)*34300/2;
-        printf("DISTANCE MEASURED!\n");
         semaphore_operation(WUNLOCK);
+        printf("DISTANCE MEASURED!\n");
     }
 }
 
@@ -128,7 +128,7 @@ void p3_thread3(struct argsForpthread *demArgs)
 {
     while(demArgs->alive) {
         semaphore_operation(LOCK);
-        printf("THREAD3 LOCK\n");
+        printf("THREAD3 LOCKED\n");
         digitalWrite(GREEN, 0);
         digitalWrite(YELLOW, 0);
         digitalWrite(RED, 0);
@@ -144,8 +144,8 @@ void p3_thread3(struct argsForpthread *demArgs)
         {
             digitalWrite(GREEN,1);
         }
-        printf("SET LEDS\nSEMID %d\n",semid);
         semaphore_operation(UNLOCK);
+        printf("UNLOCKED, DID SET LEDS, SEMID %d\n",semid);
     }
 }
 
@@ -159,9 +159,9 @@ void p3_thread4(struct argsForpthread *demArgs)
         {
             softToneWrite(SNDOUT,100);
             delay(300);
-            printf("Distance: %lf\nSEMID %d\n",demArgs->distance,semid);
         }
         semaphore_operation(UNLOCK);
+        printf("Distance: %lf\nSEMID %d\n",demArgs->distance,semid);
     }
 }
 
