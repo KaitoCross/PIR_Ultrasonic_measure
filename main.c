@@ -72,6 +72,7 @@ void p3_thread1(struct argsForpthread *demArgs)
     while(demArgs->alive)
     {
         semaphore_operation(WLOCK);
+        printf("THREAD1 LOCK\n");
         if (digitalRead(READ_PIR) == 1)
         {
         demArgs->detectedMove=1;
@@ -92,6 +93,7 @@ void p3_thread2(struct argsForpthread * demArgs)
     while(demArgs->alive)
     {
         semaphore_operation(WLOCK);
+        printf("THREAD2 LOCK\n");
         digitalWrite(TRIGGER_USO,1);
         delay(10);
         digitalWrite(TRIGGER_USO,0);
@@ -129,6 +131,7 @@ void p3_thread3(struct argsForpthread *demArgs)
 {
     while(demArgs->alive) {
         semaphore_operation(LOCK);
+        printf("THREAD3 LOCK\n");
         digitalWrite(GREEN, 0);
         digitalWrite(YELLOW, 0);
         digitalWrite(RED, 0);
@@ -154,6 +157,7 @@ void p3_thread4(struct argsForpthread *demArgs)
     while(demArgs->alive)
     {
         semaphore_operation(LOCK);
+        printf("THREAD4 LOCK\n");
         if(demArgs->distance < 10.0)
         {
             softToneWrite(SNDOUT,100);
