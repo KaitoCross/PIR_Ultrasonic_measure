@@ -20,9 +20,9 @@
 #define SNDOUT 24
 #define WLOCK -3
 #define WUNLOCK 3
-#define KEY 1337
-#define LOCK       -1
-#define UNLOCK      1
+#define KEY 1338
+#define LOCK       -2
+#define UNLOCK      2
 #define PERM 0666      /* Zugriffsrechte */
 
 static struct sembuf semaphore;
