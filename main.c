@@ -69,8 +69,8 @@ struct argsForpthread
 void p3_thread2(struct argsForpthread * demArgs)
 {
     semaphore_operation(WLOCK);
-struct timeval start, ende;
-long sec, usec;
+    struct timeval start, ende;
+    long sec, usec;
     while(1)
     {
      digitalWrite(TRIGGER_USO,1);
@@ -101,6 +101,7 @@ long sec, usec;
         usec = ende.tv_usec - start.tv_usec;
         double totaldiff = (double)sec + (double)usec/1000;
         demArgs->distance = ((double)sec + (double)usec/1000)*34300/2;
+        printf("DISTANCE MEASURED!\n");
         semaphore_operation(WUNLOCK);
     }
 }
@@ -113,6 +114,7 @@ while(1)
     if (digitalRead(READ_PIR) == 1)
     {
     demArgs->detectedMove=1;
+    printf("MOVEMENT DETECTED\n");
     semaphore_operation(WUNLOCK);
     }
     else
@@ -141,6 +143,7 @@ void p3_thread3(struct argsForpthread *demArgs)
         {
             digitalWrite(GREEN,1);
         }
+        printf("SET LEDS\n");
         semaphore_operation(UNLOCK);
     }
 }
@@ -150,10 +153,11 @@ void p3_thread4(struct argsForpthread *demArgs)
     while(1)
     {
         semaphore_operation(LOCK);
-        if(demArgs->distance < 10)
+        if(demArgs->distance < 10.0)
         {
             softToneWrite(SNDOUT,100);
             delay(300);
+            printf("Distance: %lf\n",demArgs->distance);
         }
         semaphore_operation(UNLOCK);
     }
