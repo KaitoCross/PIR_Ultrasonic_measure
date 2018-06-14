@@ -9,6 +9,7 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <pthread.h>
+#include <zconf.h>
 
 #define RED 27
 #define YELLOW 28
@@ -167,6 +168,14 @@ int main() {
     demArgs.evaluationDone=0;
     int res;
     res = init_semaphore (2,KEY);
+    wiringPiSetup();
+    pinMode(READ_PIR,INPUT);
+    pinMode(READ_USO,INPUT);
+    pinMode(RED,OUTPUT);
+    pinMode(YELLOW,OUTPUT);
+    pinMode(GREEN,OUTPUT);
+    pinMode(TRIGGER_USO,OUTPUT);
+    pinMode(SNDOUT,SOFT_TONE_OUTPUT);
     if (res < 0) {
         printf("ERROR CREATING SEMAPHORE");
         return EXIT_FAILURE;
@@ -192,6 +201,10 @@ int main() {
         return EXIT_FAILURE;
     }
 
-
+    sleep(10);
+    pthread_join(readPIR,NULL);
+    pthread_join(calcDist,NULL);
+    pthread_join(doSound,NULL);
+    pthread_join(doLED,NULL);
     return 0;
 }
