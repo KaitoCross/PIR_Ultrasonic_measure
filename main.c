@@ -167,8 +167,10 @@ int main() {
     demArgs.evaluationDone=0;
     int res;
     res = init_semaphore (2,KEY);
-    if (res < 0)
+    if (res < 0) {
+        printf("ERROR CREATING SEMAPHORE");
         return EXIT_FAILURE;
+    }
     if (pthread_create(&readPIR,NULL,&p3_thread1,&demArgs)!=0)
     {
         printf("ERROR CREATING THREAD");
