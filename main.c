@@ -18,11 +18,11 @@
 #define READ_USO 7
 #define TRIGGER_USO 8
 #define SNDOUT 24
-#define WLOCK -3
-#define WUNLOCK 3
-#define KEY 1338
-#define LOCK       -2
-#define UNLOCK      2
+#define WLOCK -2
+#define WUNLOCK 2
+#define KEY 1336
+#define LOCK       -1
+#define UNLOCK      1
 #define PERM 0666      /* Zugriffsrechte */
 
 static struct sembuf semaphore;
@@ -66,6 +66,24 @@ struct argsForpthread
     short detectedMove;
 };
 
+void p3_thread1(struct argsForpthread *demArgs)
+{
+    while(1)
+    {
+        semaphore_operation(WLOCK);
+        if (digitalRead(READ_PIR) == 1)
+        {
+        demArgs->detectedMove=1;
+        printf("MOVEMENT DETECTED\n");
+        semaphore_operation(WUNLOCK);
+        }
+        else
+        {
+            demArgs->detectedMove=0;
+        }
+    }
+}
+
 void p3_thread2(struct argsForpthread * demArgs)
 {
     semaphore_operation(WLOCK);
@@ -73,22 +91,22 @@ void p3_thread2(struct argsForpthread * demArgs)
     long sec, usec;
     while(1)
     {
-     digitalWrite(TRIGGER_USO,1);
-     delay(10);
-     digitalWrite(TRIGGER_USO,0);
-     if (gettimeofday(&start,(struct timezone*)0))
-     {
-         printf("error\n");
-         exit(1);
-     }
-     while (digitalRead(READ_USO)==0)
-     {
-         if (gettimeofday(&start,(struct timezone*)0))
-         {
-             printf("error\n");
-             exit(1);
-         }
-     }
+        digitalWrite(TRIGGER_USO,1);
+        delay(10);
+        digitalWrite(TRIGGER_USO,0);
+        if (gettimeofday(&start,(struct timezone*)0))
+        {
+            printf("error\n");
+            exit(1);
+        }
+        while (digitalRead(READ_USO)==0)
+        {
+            if (gettimeofday(&start,(struct timezone*)0))
+            {
+                printf("error\n");
+                exit(1);
+            }
+        }
         while (digitalRead(READ_USO)==1)
         {
             if (gettimeofday(&ende,(struct timezone*)0))
@@ -104,24 +122,6 @@ void p3_thread2(struct argsForpthread * demArgs)
         printf("DISTANCE MEASURED!\n");
         semaphore_operation(WUNLOCK);
     }
-}
-
-void p3_thread1(struct argsForpthread *demArgs)
-{
-while(1)
-{
-    semaphore_operation(WLOCK);
-    if (digitalRead(READ_PIR) == 1)
-    {
-    demArgs->detectedMove=1;
-    printf("MOVEMENT DETECTED\n");
-    semaphore_operation(WUNLOCK);
-    }
-    else
-    {
-        demArgs->detectedMove=0;
-    }
-}
 }
 
 void p3_thread3(struct argsForpthread *demArgs)
@@ -143,7 +143,7 @@ void p3_thread3(struct argsForpthread *demArgs)
         {
             digitalWrite(GREEN,1);
         }
-        printf("SET LEDS\n");
+        printf("SET LEDS\nSEMID %d\n",semid);
         semaphore_operation(UNLOCK);
     }
 }
@@ -157,7 +157,7 @@ void p3_thread4(struct argsForpthread *demArgs)
         {
             softToneWrite(SNDOUT,100);
             delay(300);
-            printf("Distance: %lf\n",demArgs->distance);
+            printf("Distance: %lf\nSEMID %d\n",demArgs->distance,semid);
         }
         semaphore_operation(UNLOCK);
     }
