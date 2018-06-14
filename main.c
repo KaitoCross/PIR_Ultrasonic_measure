@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
+#include <pthread.h>
 
 #define RED 27
 #define YELLOW 28
@@ -157,11 +158,38 @@ void p3_thread4(struct argsForpthread *demArgs)
     }
 }
 
+pthread_t readPIR, calcDist, doLED, doSound;
+
 int main() {
+    struct argsForpthread demArgs;
+    demArgs.distance=0.0;
+    demArgs.detectedMove=0;
+    demArgs.evaluationDone=0;
     int res;
     res = init_semaphore (2,KEY);
     if (res < 0)
         return EXIT_FAILURE;
+    if (pthread_create(&readPIR,NULL,&p3_thread1,&demArgs)!=0)
+    {
+        printf("ERROR CREATING THREAD");
+        return EXIT_FAILURE;
+    }
+    if (pthread_create(&calcDist,NULL,&p3_thread2,&demArgs)!=0)
+    {
+        printf("ERROR CREATING THREAD");
+        return EXIT_FAILURE;
+    }
+    if (pthread_create(&doLED,NULL,&p3_thread3,&demArgs)!=0)
+    {
+        printf("ERROR CREATING THREAD");
+        return EXIT_FAILURE;
+    }
+    if (pthread_create(&doSound,NULL,&p3_thread4,&demArgs)!=0)
+    {
+        printf("ERROR CREATING THREAD");
+        return EXIT_FAILURE;
+    }
+
 
     return 0;
 }
