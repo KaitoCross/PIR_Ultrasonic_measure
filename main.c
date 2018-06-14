@@ -168,6 +168,10 @@ int main() {
     demArgs.evaluationDone=0;
     int res;
     res = init_semaphore (2,KEY);
+    if (res < 0) {
+        printf("ERROR CREATING SEMAPHORE");
+        return EXIT_FAILURE;
+    }
     wiringPiSetup();
     pinMode(READ_PIR,INPUT);
     pinMode(READ_USO,INPUT);
@@ -176,10 +180,6 @@ int main() {
     pinMode(GREEN,OUTPUT);
     pinMode(TRIGGER_USO,OUTPUT);
     pinMode(SNDOUT,SOFT_TONE_OUTPUT);
-    if (res < 0) {
-        printf("ERROR CREATING SEMAPHORE");
-        return EXIT_FAILURE;
-    }
     if (pthread_create(&readPIR,NULL,&p3_thread1,&demArgs)!=0)
     {
         printf("ERROR CREATING THREAD");
