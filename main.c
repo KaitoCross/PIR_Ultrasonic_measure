@@ -79,6 +79,7 @@ void p3_thread1(struct argsForpthread *demArgs)
         demArgs->detectedMove=1;
         semaphore_operation(WUNLOCK);
         printf("MOVEMENT DETECTED\n");
+        sleep(1);
     }
 }
 
