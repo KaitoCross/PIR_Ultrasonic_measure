@@ -94,8 +94,9 @@ void p3_thread2(struct argsForpthread * demArgs)
     while(demArgs->alive)
     {
         semaphore_operation(semid_2,WLOCK);
+        printf("THREAD2 S2 LOCK\n");
         semaphore_operation(semid,WLOCK);
-        printf("THREAD2 LOCK\n");
+        printf("THREAD2 S3 LOCK\n");
         digitalWrite(TRIGGER_USO,1);
         delay(10);
         digitalWrite(TRIGGER_USO,0);
@@ -134,8 +135,9 @@ void p3_thread3(struct argsForpthread *demArgs)
 {
     while(demArgs->alive) {
         semaphore_operation(semid_3,LOCK);
+        printf("THREAD3 S3 LOCKED\n");
         semaphore_operation(semid_2,LOCK);
-        printf("THREAD3 LOCKED\n");
+        printf("THREAD3 S2 LOCKED\n");
         digitalWrite(GREEN, 0);
         digitalWrite(YELLOW, 0);
         digitalWrite(RED, 0);
@@ -162,8 +164,9 @@ void p3_thread4(struct argsForpthread *demArgs)
     while(demArgs->alive)
     {
         semaphore_operation(semid_3,LOCK);
+        printf("THREAD4 S3 LOCKED\n");
         semaphore_operation(semid_2,LOCK);
-        printf("THREAD4 LOCK\n");
+        printf("THREAD4 S2 LOCKED\n");
         if(demArgs->distance < 10.0)
         {
             softToneWrite(SNDOUT,100);
