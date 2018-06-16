@@ -10,6 +10,7 @@
 #include <sys/sem.h>
 #include <pthread.h>
 #include <zconf.h>
+#include <signal.h>
 
 #define RED 27
 #define YELLOW 28
@@ -81,7 +82,7 @@ void p3_thread1(struct argsForpthread *demArgs)
         }
         demArgs->detectedMove=1;
         semaphore_operation(semid,WUNLOCK);
-        semaphore_operation(semid_3,WLOCK);
+        semaphore_operation(semid_3,WUNLOCK);
         printf("MOVEMENT DETECTED\n");
         delay(1);
     }
@@ -96,7 +97,7 @@ void p3_thread2(struct argsForpthread * demArgs)
         semaphore_operation(semid_2,WLOCK);
         printf("THREAD2 S2 LOCK\n");
         semaphore_operation(semid,WLOCK);
-        printf("THREAD2 S3 LOCK\n");
+        printf("THREAD2 S0 LOCK\n");
         digitalWrite(TRIGGER_USO,1);
         delay(10);
         digitalWrite(TRIGGER_USO,0);
@@ -180,7 +181,16 @@ void p3_thread4(struct argsForpthread *demArgs)
 
 pthread_t readPIR, calcDist, doLED, doSound;
 
+void killsems(int sig)
+{
+    semctl (semid, 0, IPC_RMID, 0);
+    semctl (semid_2, 0, IPC_RMID, 0);
+    semctl (semid_3, 0, IPC_RMID, 0);
+    printf("Semaphores deleted");
+}
+
 int main() {
+    signal(SIGINT,killsems);
     struct argsForpthread demArgs;
     demArgs.distance=0.0;
     demArgs.detectedMove=0;
@@ -233,11 +243,10 @@ int main() {
 
     sleep(15);
     demArgs.alive=0;
+    killsems(0);
     pthread_join(readPIR,NULL);
     pthread_join(calcDist,NULL);
     pthread_join(doSound,NULL);
     pthread_join(doLED,NULL);
-    semctl (semid, 0, IPC_RMID, 0);
-    semctl (semid_2, 0, IPC_RMID, 0);
     return 0;
 }
