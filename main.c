@@ -27,23 +27,24 @@
 
 static struct sembuf semaphore;
 static int semid;
+static int semid_2;
 
-static int init_semaphore (short initval, int semkey) {
+static int init_semaphore (int *sema_id, short initval, int semkey) {
     /* Testen, ob das Semaphor bereits existiert */
-    semid = semget (semkey, 0, IPC_PRIVATE);
-    if (semid < 0) {
+    *sema_id = semget (semkey, 0, IPC_PRIVATE);
+    if (*sema_id < 0) {
         /* ... existiert noch nicht, also anlegen        */
         /* Alle Zugriffsrechte der Dateikreierungsmaske */
         /* erlauben                                     */
         umask(0);
-        semid = semget (semkey, 1, IPC_CREAT | IPC_EXCL | PERM);
-        if (semid < 0) {
+        *sema_id = semget (semkey, 1, IPC_CREAT | IPC_EXCL | PERM);
+        if (*sema_id < 0) {
             printf ("Fehler beim Anlegen des Semaphors ...\n");
             return -1;
         }
-        printf ("(angelegt) Semaphor-ID : %d\n", semid);
+        printf ("(angelegt) Semaphor-ID : %d\n", *sema_id);
         /* Semaphor mit initval initialisieren */
-        if (semctl (semid, 0, SETVAL, initval) == -1)
+        if (semctl (*sema_id, 0, SETVAL, initval) == -1)
             return -1;
     }
     return 1;
@@ -89,6 +90,7 @@ void p3_thread2(struct argsForpthread * demArgs)
     long sec, usec;
     while(demArgs->alive)
     {
+        semaphore_operation(semid_2,WLOCK);
         semaphore_operation(semid,WLOCK);
         printf("THREAD2 LOCK\n");
         digitalWrite(TRIGGER_USO,1);
@@ -119,8 +121,9 @@ void p3_thread2(struct argsForpthread * demArgs)
         usec = ende.tv_usec - start.tv_usec;
         double totaldiff = (double)sec + (double)usec/1000;
         demArgs->distance = (totaldiff*34300)/2;
-        semaphore_operation(semid,WUNLOCK);
-        printf("DISTANCE MEASURED!\n");
+        semaphore_operation(semid,WLOCK);
+        semaphore_operation(semid_2,WUNLOCK);
+        printf("DISTANCE MEASURED! SemID2 : %d\n",semid_2);
     }
 }
 
@@ -128,6 +131,7 @@ void p3_thread3(struct argsForpthread *demArgs)
 {
     while(demArgs->alive) {
         semaphore_operation(semid,LOCK);
+        semaphore_operation(semid_2,LOCK);
         printf("THREAD3 LOCKED\n");
         digitalWrite(GREEN, 0);
         digitalWrite(YELLOW, 0);
@@ -144,6 +148,7 @@ void p3_thread3(struct argsForpthread *demArgs)
         {
             digitalWrite(GREEN,1);
         }
+        semaphore_operation(semid_2,UNLOCK);
         semaphore_operation(semid,UNLOCK);
         printf("UNLOCKED, DID SET LEDS, SEMID %d\n",semid);
     }
@@ -154,12 +159,14 @@ void p3_thread4(struct argsForpthread *demArgs)
     while(demArgs->alive)
     {
         semaphore_operation(semid,LOCK);
+        semaphore_operation(semid_2,LOCK);
         printf("THREAD4 LOCK\n");
         if(demArgs->distance < 10.0)
         {
             softToneWrite(SNDOUT,100);
             delay(300);
         }
+        semaphore_operation(semid_2,UNLOCK);
         semaphore_operation(semid,UNLOCK);
         printf("Distance: %lf\nSEMID %d\n",demArgs->distance,semid);
     }
@@ -174,7 +181,12 @@ int main() {
     demArgs.evaluationDone=0;
     demArgs.alive=1;
     int res;
-    res = init_semaphore (2,KEY);
+    res = init_semaphore(&semid,2,KEY);
+    if (res < 0) {
+        printf("ERROR CREATING SEMAPHORE");
+        return EXIT_FAILURE;
+    }
+    res = init_semaphore(&semid_2,2,KEY+1);
     if (res < 0) {
         printf("ERROR CREATING SEMAPHORE");
         return EXIT_FAILURE;
@@ -214,5 +226,7 @@ int main() {
     pthread_join(calcDist,NULL);
     pthread_join(doSound,NULL);
     pthread_join(doLED,NULL);
+    semctl (semid, 0, IPC_RMID, 0);
+    semctl (semid_2, 0, IPC_RMID, 0);
     return 0;
 }
