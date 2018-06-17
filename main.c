@@ -28,9 +28,9 @@
 
 static struct sembuf semaphore;
 static int semid;
-static int semid_2;//Zwischen P2 (writer) und reader P3 & P4
-static int semid_3;
+static int semid_2;
 static int semid_4;
+static int semid_5;
 
 static int init_semaphore (int *sema_id, short initval, int semkey) {
     /* Testen, ob das Semaphor bereits existiert */
@@ -118,20 +118,15 @@ void p3_thread1(struct argsForpthread *demArgs)
 {
     while(demArgs->alive)
     {
-        //semaphore_operation(semid_3,WLOCK);
-        //semaphore_operation(semid,WLOCK);
-        //semaphore_operation(semid_4,LOCK);
+        semaphore_operation(semid_4,LOCK);
         printf("THREAD1 LOCK\n");
         while (digitalRead(READ_PIR) != 1) {
             demArgs->detectedMove=0;
 	        delay(10);
         }
         demArgs->detectedMove=1;
+        semaphore_operation(semid,UNLOCK);
         printf("MOVEMENT DETECTED\n");
-        //semaphore_operation(semid_4,UNLOCK);
-        semaphore_operation(semid,WUNLOCK);
-        semaphore_operation(semid_3,WUNLOCK);
-        delay(1);
     }
 }
 
@@ -139,13 +134,12 @@ void p3_thread2(struct argsForpthread * demArgs)
 {
     while(demArgs->alive)
     {
-        //semaphore_operation(semid_2,WLOCK);
-        //printf("THREAD2 S2 LOCK\n");
-        semaphore_operation(semid,WLOCK);
-        printf("THREAD2 S0 LOCK\n");
+        semaphore_operation(semid,LOCK);
+        semaphore_operation(semid_5,LOCK);
+        printf("MEASURING DISTANCE...\n");
         demArgs->distance = measureDistance(READ_USO,TRIGGER_USO);
-        //semaphore_operation(semid,WUNLOCK);
-        semaphore_operation(semid_2,WUNLOCK);
+        semaphore_operation(semid_5,UNLOCK);
+        semaphore_operation(semid_2,UNLOCK);
         printf("T2 DISTANCE MEASURED!\n");
     }
 }
@@ -153,10 +147,8 @@ void p3_thread2(struct argsForpthread * demArgs)
 void p3_thread3(struct argsForpthread *demArgs)
 {
     while(demArgs->alive) {
-        semaphore_operation(semid_3,LOCK);
-        printf("THREAD3 S3 LOCKED\n");
         semaphore_operation(semid_2,LOCK);
-        printf("THREAD3 S2 LOCKED\n");
+        printf("SETTING LEDS\n");
         digitalWrite(GREEN, 0);
         digitalWrite(YELLOW, 0);
         digitalWrite(RED, 0);
@@ -172,8 +164,6 @@ void p3_thread3(struct argsForpthread *demArgs)
         {
             digitalWrite(GREEN,1);
         }
-        //semaphore_operation(semid_2,UNLOCK);
-        //semaphore_operation(semid_3,LOCK);
         printf("T3 repeats, DID SET LEDS");
     }
 }
@@ -182,10 +172,8 @@ void p3_thread4(struct argsForpthread *demArgs)
 {
     while(demArgs->alive)
     {
-        semaphore_operation(semid_3,LOCK);
-        printf("THREAD4 S3 LOCKED\n");
-        semaphore_operation(semid_2,LOCK);
-        printf("THREAD4 S2 LOCKED\n");
+        semaphore_operation(semid_5,LOCK);
+        printf("SETTING LEDs\n");
         if(demArgs->distance < 10.0)
         {
             softToneWrite(SNDOUT,100);
@@ -195,8 +183,8 @@ void p3_thread4(struct argsForpthread *demArgs)
         {
             softToneWrite(SNDOUT,0);
         }
-        //semaphore_operation(semid_2,UNLOCK);
-        //semaphore_operation(semid_3,LOCK);
+        semaphore_operation(semid_5,UNLOCK);
+        semaphore_operation(semid_4,UNLOCK);
         printf("T4 worked, Distance: %lf\n",demArgs->distance);
     }
 }
@@ -207,8 +195,8 @@ void killsems(int sig)
 {
     semctl (semid, 0, IPC_RMID, 0);
     semctl (semid_2, 0, IPC_RMID, 0);
-    semctl (semid_3, 0, IPC_RMID, 0);
     semctl (semid_4, 0, IPC_RMID, 0);
+    semctl (semid_5, 0, IPC_RMID, 0);
     printf("Semaphores deleted");
     softToneWrite(SNDOUT,0);
 }
@@ -232,12 +220,12 @@ int main() {
         printf("ERROR CREATING SEMAPHORE");
         return EXIT_FAILURE;
     }
-    res = init_semaphore(&semid_3,0,KEY+2);
+    res = init_semaphore(&semid_4,0,KEY+2);
     if (res < 0) {
         printf("ERROR CREATING SEMAPHORE");
         return EXIT_FAILURE;
     }
-    res = init_semaphore(&semid_4,1,KEY+3);
+    res = init_semaphore(&semid_5,1,KEY+3);
     if (res < 0) {
         printf("ERROR CREATING SEMAPHORE");
         return EXIT_FAILURE;
