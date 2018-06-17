@@ -127,10 +127,10 @@ void p3_thread1(struct argsForpthread *demArgs)
 	        delay(10);
         }
         demArgs->detectedMove=1;
+        printf("MOVEMENT DETECTED\n");
         //semaphore_operation(semid_4,UNLOCK);
         semaphore_operation(semid,WUNLOCK);
         semaphore_operation(semid_3,WUNLOCK);
-        printf("MOVEMENT DETECTED\n");
         delay(1);
     }
 }
@@ -146,7 +146,7 @@ void p3_thread2(struct argsForpthread * demArgs)
         demArgs->distance = measureDistance(READ_USO,TRIGGER_USO);
         //semaphore_operation(semid,WUNLOCK);
         semaphore_operation(semid_2,WUNLOCK);
-        printf("DISTANCE MEASURED! SemID2 : %d\n",semid_2);
+        printf("T2 DISTANCE MEASURED!\n");
     }
 }
 
@@ -172,9 +172,9 @@ void p3_thread3(struct argsForpthread *demArgs)
         {
             digitalWrite(GREEN,1);
         }
-        semaphore_operation(semid_2,UNLOCK);
+        //semaphore_operation(semid_2,UNLOCK);
         //semaphore_operation(semid_3,LOCK);
-        printf("UNLOCKED, DID SET LEDS, SEMID %d\n",semid);
+        printf("T3 repeats, DID SET LEDS");
     }
 }
 
@@ -195,9 +195,9 @@ void p3_thread4(struct argsForpthread *demArgs)
         {
             softToneWrite(SNDOUT,0);
         }
-        semaphore_operation(semid_2,UNLOCK);
+        //semaphore_operation(semid_2,UNLOCK);
         //semaphore_operation(semid_3,LOCK);
-        printf("Distance: %lf\nSEMID %d\n",demArgs->distance,semid);
+        printf("T4 worked, Distance: %lf\n",demArgs->distance);
     }
 }
 
