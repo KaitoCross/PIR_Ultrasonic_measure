@@ -125,12 +125,15 @@ void p3_thread1(struct argsForpthread *demArgs)
         printf("THREAD1 LOCK\n");
         while (digitalRead(READ_PIR) != 1) {
             demArgs->detectedMove=0;
-	        delay(10);
+	        //delay(10);
         }
         demArgs->detectedMove=1;
         demArgs->calcDone=0;
+	if (demArgs->detectedMove)
+	{
         semaphore_operation(semid,UNLOCK);
         printf("MOVEMENT DETECTED\n");
+	}
     }
 }
 
@@ -138,7 +141,7 @@ void p3_thread2(struct argsForpthread * demArgs)
 {
     while(demArgs->alive)
     {
-        while (demArgs->detectedMove) {
+//        while (demArgs->detectedMove) {
             semaphore_operation(semid, LOCK);
             semaphore_operation(semid_5, LOCK);
             printf("MEASURING DISTANCE...\n");
@@ -147,7 +150,7 @@ void p3_thread2(struct argsForpthread * demArgs)
             semaphore_operation(semid_5, UNLOCK);
             semaphore_operation(semid_2, UNLOCK);
             printf("T2 DISTANCE MEASURED!\n");
-        }
+//        }
     }
 }
 
