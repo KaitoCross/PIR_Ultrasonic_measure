@@ -118,7 +118,7 @@ void p3_thread1(struct argsForpthread *demArgs)
     while(demArgs->alive)
     {
         //semaphore_operation(semid_3,WLOCK);
-        semaphore_operation(semid,WLOCK);
+        //semaphore_operation(semid,WLOCK);
         printf("THREAD1 LOCK\n");
         while (digitalRead(READ_PIR) != 1) {
             demArgs->detectedMove=0;
@@ -136,8 +136,8 @@ void p3_thread2(struct argsForpthread * demArgs)
 {
     while(demArgs->alive)
     {
-        semaphore_operation(semid_2,WLOCK);
-        printf("THREAD2 S2 LOCK\n");
+        //semaphore_operation(semid_2,WLOCK);
+        //printf("THREAD2 S2 LOCK\n");
         semaphore_operation(semid,WLOCK);
         printf("THREAD2 S0 LOCK\n");
         demArgs->distance = measureDistance(READ_USO,TRIGGER_USO);
@@ -217,12 +217,12 @@ int main() {
     demArgs.evaluationDone=0;
     demArgs.alive=0;
     int res;
-    res = init_semaphore(&semid,2,KEY);
+    res = init_semaphore(&semid,0,KEY);
     if (res < 0) {
         printf("ERROR CREATING SEMAPHORE");
         return EXIT_FAILURE;
     }
-    res = init_semaphore(&semid_2,2,KEY+1);
+    res = init_semaphore(&semid_2,0,KEY+1);
     if (res < 0) {
         printf("ERROR CREATING SEMAPHORE");
         return EXIT_FAILURE;
