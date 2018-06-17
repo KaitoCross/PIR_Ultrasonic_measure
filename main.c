@@ -69,6 +69,7 @@ struct argsForpthread
     short evaluationDone;
     short detectedMove;
     short alive;
+    short calcDone;
 };
 
 long double measureDistance(short echopin, short triggerpin)
@@ -125,6 +126,7 @@ void p3_thread1(struct argsForpthread *demArgs)
 	        delay(10);
         }
         demArgs->detectedMove=1;
+        demArgs->calcDone=0;
         semaphore_operation(semid,UNLOCK);
         printf("MOVEMENT DETECTED\n");
     }
@@ -138,6 +140,7 @@ void p3_thread2(struct argsForpthread * demArgs)
         semaphore_operation(semid_5,LOCK);
         printf("MEASURING DISTANCE...\n");
         demArgs->distance = measureDistance(READ_USO,TRIGGER_USO);
+        demArgs->calcDone=1;
         semaphore_operation(semid_5,UNLOCK);
         semaphore_operation(semid_2,UNLOCK);
         printf("T2 DISTANCE MEASURED!\n");
@@ -174,17 +177,17 @@ void p3_thread4(struct argsForpthread *demArgs)
     {
         semaphore_operation(semid_5,LOCK);
         printf("SETTING LEDs\n");
-        if(demArgs->distance < 10.0)
-        {
-            softToneWrite(SNDOUT,100);
-            delay(300);
-            softToneWrite(SNDOUT,0);
-        } else
-        {
-            softToneWrite(SNDOUT,0);
+        if (demArgs->calcDone) {
+            if (demArgs->distance < 10.0) {
+                softToneWrite(SNDOUT, 100);
+                delay(300);
+                softToneWrite(SNDOUT, 0);
+            }
+            semaphore_operation(semid_4,UNLOCK);
+            demArgs->calcDone=0;
         }
+        softToneWrite(SNDOUT,0);
         semaphore_operation(semid_5,UNLOCK);
-        semaphore_operation(semid_4,UNLOCK);
         printf("T4 worked, Distance: %lf\n",demArgs->distance);
     }
 }
@@ -209,6 +212,7 @@ int main() {
     demArgs.detectedMove=0;
     demArgs.evaluationDone=0;
     demArgs.alive=0;
+    demArgs.calcDone=0;
     int res;
     res = init_semaphore(&semid,0,KEY);
     if (res < 0) {
