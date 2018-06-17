@@ -138,14 +138,16 @@ void p3_thread2(struct argsForpthread * demArgs)
 {
     while(demArgs->alive)
     {
-        semaphore_operation(semid,LOCK);
-        semaphore_operation(semid_5,LOCK);
-        printf("MEASURING DISTANCE...\n");
-        demArgs->distance = measureDistance(READ_USO,TRIGGER_USO);
-        demArgs->calcDone=1;
-        semaphore_operation(semid_5,UNLOCK);
-        semaphore_operation(semid_2,UNLOCK);
-        printf("T2 DISTANCE MEASURED!\n");
+        while (demArgs->detectedMove) {
+            semaphore_operation(semid, LOCK);
+            semaphore_operation(semid_5, LOCK);
+            printf("MEASURING DISTANCE...\n");
+            demArgs->distance = measureDistance(READ_USO, TRIGGER_USO);
+            demArgs->calcDone = 1;
+            semaphore_operation(semid_5, UNLOCK);
+            semaphore_operation(semid_2, UNLOCK);
+            printf("T2 DISTANCE MEASURED!\n");
+        }
     }
 }
 
