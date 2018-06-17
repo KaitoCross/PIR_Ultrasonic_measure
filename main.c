@@ -169,7 +169,7 @@ void p3_thread3(struct argsForpthread *demArgs)
         {
             digitalWrite(GREEN,1);
         }
-        printf("T3 repeats, DID SET LEDS");
+        printf("T3 repeats, DID SET LEDS\n");
     }
 }
 
@@ -228,7 +228,7 @@ int main() {
         printf("ERROR CREATING SEMAPHORE");
         return EXIT_FAILURE;
     }
-    res = init_semaphore(&semid_3,0,KEY+2);
+    res = init_semaphore(&semid_3,1,KEY+2);
     if (res < 0) {
         printf("ERROR CREATING SEMAPHORE");
         return EXIT_FAILURE;
