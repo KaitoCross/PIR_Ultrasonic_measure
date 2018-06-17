@@ -79,6 +79,7 @@ void p3_thread1(struct argsForpthread *demArgs)
         printf("THREAD1 LOCK\n");
         while (digitalRead(READ_PIR) != 1) {
             demArgs->detectedMove=0;
+	delay(10);
         }
         demArgs->detectedMove=1;
         semaphore_operation(semid,WUNLOCK);
@@ -106,7 +107,8 @@ void p3_thread2(struct argsForpthread * demArgs)
             printf("error\n");
             exit(1);
         }
-        while (digitalRead(READ_USO)==0)
+	printf("PIN %d status: %d\n",READ_USO, digitalRead(READ_USO));
+        while (digitalRead(READ_USO)==LOW)
         {
             if (gettimeofday(&start,(struct timezone*)0))
             {
@@ -114,7 +116,7 @@ void p3_thread2(struct argsForpthread * demArgs)
                 exit(1);
             }
         }
-        while (digitalRead(READ_USO)==1)
+        while (digitalRead(READ_USO)==HIGH)
         {
             if (gettimeofday(&ende,(struct timezone*)0))
             {
@@ -124,11 +126,12 @@ void p3_thread2(struct argsForpthread * demArgs)
         }
         sec = ende.tv_sec - start.tv_sec;
         usec = ende.tv_usec - start.tv_usec;
-        double totaldiff = (double)sec + (double)usec/1000;
-        demArgs->distance = (totaldiff*34300)/2;
+       	long double totaldiff = (double)sec + (double)usec/1000000.0;
+        demArgs->distance = ((totaldiff*34300.0)/2.0);
         semaphore_operation(semid,WUNLOCK);
         semaphore_operation(semid_2,WUNLOCK);
         printf("DISTANCE MEASURED! SemID2 : %d\n",semid_2);
+	delay(100);
     }
 }
 
@@ -187,6 +190,7 @@ void killsems(int sig)
     semctl (semid_2, 0, IPC_RMID, 0);
     semctl (semid_3, 0, IPC_RMID, 0);
     printf("Semaphores deleted");
+    softToneWrite(SNDOUT,0);
 }
 
 int main() {
@@ -195,7 +199,7 @@ int main() {
     demArgs.distance=0.0;
     demArgs.detectedMove=0;
     demArgs.evaluationDone=0;
-    demArgs.alive=1;
+    demArgs.alive=0;
     int res;
     res = init_semaphore(&semid,2,KEY);
     if (res < 0) {
@@ -220,6 +224,40 @@ int main() {
     pinMode(GREEN,OUTPUT);
     pinMode(TRIGGER_USO,OUTPUT);
     pinMode(SNDOUT,SOFT_TONE_OUTPUT);
+    struct timeval _start, _ende;
+    long _sec, _usec;
+        digitalWrite(TRIGGER_USO,HIGH);
+        delayMicroseconds(10);
+        digitalWrite(TRIGGER_USO,LOW);
+        if (gettimeofday(&_start,(struct timezone*)0))
+        {
+            printf("error\n");
+            exit(1);
+        }
+	printf("%d\n start usec %ld\n",digitalRead(READ_USO),_start.tv_usec);
+        while (digitalRead(READ_USO) == LOW){
+            if (gettimeofday(&_start,(struct timezone*)0))
+            {
+                printf("error\n");
+                exit(1);
+            }
+        }
+	while (digitalRead(READ_USO) == HIGH){
+            if (gettimeofday(&_ende,(struct timezone*)0))
+            {
+                printf("error\n");
+                exit(1);
+            }
+	}
+	printf("END uSec %d\n",_ende.tv_usec);
+        _sec = _ende.tv_sec - _start.tv_sec;
+        _usec = _ende.tv_usec - _start.tv_usec; //_ende.tv_usec - _start.tv_usec;
+        long double _totaldiff = ((long double)_usec)/1000000.0;
+        //demArgs.distance = 100*((_usec/1000000.0)*340.29)/2;
+        demArgs.distance = (_totaldiff*34300)/2;
+	printf("Distance test %lf\n",demArgs.distance);
+
+	demArgs.alive=1;
     if (pthread_create(&readPIR,NULL,&p3_thread1,&demArgs)!=0)
     {
         printf("ERROR CREATING THREAD");
@@ -248,5 +286,42 @@ int main() {
     pthread_join(calcDist,NULL);
     pthread_join(doSound,NULL);
     pthread_join(doLED,NULL);
+//    struct timeval start, ende;
+//    long sec, usec;
+//       semaphore_operation(semid_2,WLOCK);
+//       printf("THREAD2 S2 LOCK\n");
+//       semaphore_operation(semid,WLOCK);
+//        printf("THREAD2 S0 LOCK\n");
+/*	if (demArgs.alive ==0)
+{
+        digitalWrite(TRIGGER_USO,1);
+        delay(10);
+        digitalWrite(TRIGGER_USO,0);
+        if (gettimeofday(&start,(struct timezone*)0))
+        {
+            printf("error\n");
+            exit(1);
+        }
+        while (digitalRead(READ_USO)==0)
+        {
+            if (gettimeofday(&start,(struct timezone*)0))
+            {
+                printf("error\n");
+                exit(1);
+            }
+        }
+        while (digitalRead(READ_USO)==1)
+        {            if (gettimeofday(&ende,(struct timezone*)0))
+            {
+                printf("error\n");
+                exit(1);
+            }
+        }
+        sec = ende.tv_sec - start.tv_sec;
+        usec = ende.tv_usec - start.tv_usec;
+        double totaldiff = (double)sec + (double)usec/1000.0;
+        demArgs.distance = ((totaldiff*34300)/2.0);
+	printf("Distance last %d",demArgs.distance);
+}*/
     return 0;
 }
