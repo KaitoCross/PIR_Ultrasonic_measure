@@ -117,12 +117,12 @@ void p3_thread1(struct argsForpthread *demArgs)
 {
     while(demArgs->alive)
     {
-        semaphore_operation(semid_3,WLOCK);
+        //semaphore_operation(semid_3,WLOCK);
         semaphore_operation(semid,WLOCK);
         printf("THREAD1 LOCK\n");
         while (digitalRead(READ_PIR) != 1) {
             demArgs->detectedMove=0;
-	delay(10);
+	        delay(10);
         }
         demArgs->detectedMove=1;
         semaphore_operation(semid,WUNLOCK);
@@ -134,8 +134,6 @@ void p3_thread1(struct argsForpthread *demArgs)
 
 void p3_thread2(struct argsForpthread * demArgs)
 {
-    struct timeval start, ende;
-    long sec, usec;
     while(demArgs->alive)
     {
         semaphore_operation(semid_2,WLOCK);
@@ -146,7 +144,6 @@ void p3_thread2(struct argsForpthread * demArgs)
         semaphore_operation(semid,WUNLOCK);
         semaphore_operation(semid_2,WUNLOCK);
         printf("DISTANCE MEASURED! SemID2 : %d\n",semid_2);
-	delay(100);
     }
 }
 
@@ -160,20 +157,20 @@ void p3_thread3(struct argsForpthread *demArgs)
         digitalWrite(GREEN, 0);
         digitalWrite(YELLOW, 0);
         digitalWrite(RED, 0);
-        if(demArgs->distance<10)
+        if(demArgs->distance<10.0)
         {
             digitalWrite(RED,1);
         }
-        else if (demArgs->distance >= 10 && demArgs->distance <= 20)
+        else if (demArgs->distance >= 10.0 && demArgs->distance <= 20.0)
         {
             digitalWrite(YELLOW,1);
         }
-        else if (demArgs->distance > 20)
+        else if (demArgs->distance > 20.0)
         {
             digitalWrite(GREEN,1);
         }
         semaphore_operation(semid_2,UNLOCK);
-        semaphore_operation(semid_3,UNLOCK);
+        //semaphore_operation(semid_3,LOCK);
         printf("UNLOCKED, DID SET LEDS, SEMID %d\n",semid);
     }
 }
@@ -190,9 +187,12 @@ void p3_thread4(struct argsForpthread *demArgs)
         {
             softToneWrite(SNDOUT,100);
             delay(300);
+        } else
+        {
+            softToneWrite(SNDOUT,0);
         }
         semaphore_operation(semid_2,UNLOCK);
-        semaphore_operation(semid_3,UNLOCK);
+        //semaphore_operation(semid_3,LOCK);
         printf("Distance: %lf\nSEMID %d\n",demArgs->distance,semid);
     }
 }
@@ -227,7 +227,7 @@ int main() {
         printf("ERROR CREATING SEMAPHORE");
         return EXIT_FAILURE;
     }
-    res = init_semaphore(&semid_3,2,KEY+2);
+    res = init_semaphore(&semid_3,0,KEY+2);
     if (res < 0) {
         printf("ERROR CREATING SEMAPHORE");
         return EXIT_FAILURE;
