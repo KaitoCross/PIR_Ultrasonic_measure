@@ -183,12 +183,12 @@ void p3_thread4(struct argsForpthread *demArgs)
                 delay(300);
                 softToneWrite(SNDOUT, 0);
             }
-            semaphore_operation(semid_4,UNLOCK);
             demArgs->calcDone=0;
+            printf("T4 worked, Distance: %lf\n",demArgs->distance);
         }
         softToneWrite(SNDOUT,0);
         semaphore_operation(semid_5,UNLOCK);
-        printf("T4 worked, Distance: %lf\n",demArgs->distance);
+        semaphore_operation(semid_4,UNLOCK);
     }
 }
 
