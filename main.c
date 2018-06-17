@@ -187,6 +187,7 @@ void p3_thread4(struct argsForpthread *demArgs)
         {
             softToneWrite(SNDOUT,100);
             delay(300);
+            softToneWrite(SNDOUT,0);
         } else
         {
             softToneWrite(SNDOUT,0);
@@ -270,42 +271,6 @@ int main() {
     pthread_join(calcDist,NULL);
     pthread_join(doSound,NULL);
     pthread_join(doLED,NULL);
-//    struct timeval start, ende;
-//    long sec, usec;
-//       semaphore_operation(semid_2,WLOCK);
-//       printf("THREAD2 S2 LOCK\n");
-//       semaphore_operation(semid,WLOCK);
-//        printf("THREAD2 S0 LOCK\n");
-/*	if (demArgs.alive ==0)
-{
-        digitalWrite(TRIGGER_USO,1);
-        delay(10);
-        digitalWrite(TRIGGER_USO,0);
-        if (gettimeofday(&start,(struct timezone*)0))
-        {
-            printf("error\n");
-            exit(1);
-        }
-        while (digitalRead(READ_USO)==0)
-        {
-            if (gettimeofday(&start,(struct timezone*)0))
-            {
-                printf("error\n");
-                exit(1);
-            }
-        }
-        while (digitalRead(READ_USO)==1)
-        {            if (gettimeofday(&ende,(struct timezone*)0))
-            {
-                printf("error\n");
-                exit(1);
-            }
-        }
-        sec = ende.tv_sec - start.tv_sec;
-        usec = ende.tv_usec - start.tv_usec;
-        double totaldiff = (double)sec + (double)usec/1000.0;
-        demArgs.distance = ((totaldiff*34300)/2.0);
-	printf("Distance last %d",demArgs.distance);
-}*/
+
     return 0;
 }
