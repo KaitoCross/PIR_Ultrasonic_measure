@@ -21,7 +21,7 @@
 #define SNDOUT 24
 #define WLOCK -2
 #define WUNLOCK 2
-#define KEY 1336
+#define KEY 1337
 #define LOCK       -1
 #define UNLOCK      1
 #define PERM 0666      /* Zugriffsrechte */
@@ -29,6 +29,7 @@
 static struct sembuf semaphore;
 static int semid;
 static int semid_2;
+static int semid_3;
 static int semid_4;
 static int semid_5;
 
@@ -120,6 +121,7 @@ void p3_thread1(struct argsForpthread *demArgs)
     while(demArgs->alive)
     {
         semaphore_operation(semid_4,LOCK);
+        semaphore_operation(semid_3,UNLOCK);
         printf("THREAD1 LOCK\n");
         while (digitalRead(READ_PIR) != 1) {
             demArgs->detectedMove=0;
@@ -188,6 +190,7 @@ void p3_thread4(struct argsForpthread *demArgs)
         }
         softToneWrite(SNDOUT,0);
         semaphore_operation(semid_5,UNLOCK);
+        semaphore_operation(semid_3,LOCK);
         semaphore_operation(semid_4,UNLOCK);
     }
 }
@@ -198,6 +201,7 @@ void killsems(int sig)
 {
     semctl (semid, 0, IPC_RMID, 0);
     semctl (semid_2, 0, IPC_RMID, 0);
+    semctl (semid_3, 0, IPC_RMID, 0);
     semctl (semid_4, 0, IPC_RMID, 0);
     semctl (semid_5, 0, IPC_RMID, 0);
     printf("Semaphores deleted");
@@ -224,12 +228,17 @@ int main() {
         printf("ERROR CREATING SEMAPHORE");
         return EXIT_FAILURE;
     }
-    res = init_semaphore(&semid_4,0,KEY+2);
+    res = init_semaphore(&semid_3,0,KEY+2);
     if (res < 0) {
         printf("ERROR CREATING SEMAPHORE");
         return EXIT_FAILURE;
     }
-    res = init_semaphore(&semid_5,1,KEY+3);
+    res = init_semaphore(&semid_4,0,KEY+3);
+    if (res < 0) {
+        printf("ERROR CREATING SEMAPHORE");
+        return EXIT_FAILURE;
+    }
+    res = init_semaphore(&semid_5,1,KEY+4);
     if (res < 0) {
         printf("ERROR CREATING SEMAPHORE");
         return EXIT_FAILURE;
