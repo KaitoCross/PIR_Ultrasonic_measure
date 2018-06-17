@@ -92,6 +92,7 @@ long double measureDistance(short echopin, short triggerpin)
             exit(1);
         }
     }
+    printf("START uSEC %ld\n",start.tv_usec);
     while (digitalRead(echopin)==HIGH)
     {
         if (gettimeofday(&ende,(struct timezone*)0))
@@ -101,8 +102,8 @@ long double measureDistance(short echopin, short triggerpin)
         }
     }
 //}
-//	printf("START uSEC %ld\n",start.tv_usec);
-//	printf("END uSEC %ld\n",ende.tv_usec);
+	printf("START uSEC %ld\n",start.tv_usec);
+	printf("END uSEC %ld\n",ende.tv_usec);
     sec = ende.tv_sec - start.tv_sec;
     usec = ende.tv_usec - start.tv_usec;
     printf("DIFF in uSEC: %ld\n", usec);
@@ -141,35 +142,6 @@ void p3_thread2(struct argsForpthread * demArgs)
         printf("THREAD2 S2 LOCK\n");
         semaphore_operation(semid,WLOCK);
         printf("THREAD2 S0 LOCK\n");
-        /*digitalWrite(TRIGGER_USO,1);
-        delay(10);
-        digitalWrite(TRIGGER_USO,0);
-        if (gettimeofday(&start,(struct timezone*)0))
-        {
-            printf("error\n");
-            exit(1);
-        }
-	printf("PIN %d status: %d\n",READ_USO, digitalRead(READ_USO));
-        while (digitalRead(READ_USO)==LOW)
-        {
-            if (gettimeofday(&start,(struct timezone*)0))
-            {
-                printf("error\n");
-                exit(1);
-            }
-        }TRIGGER_USO
-        while (digitalRead(READ_USO)==HIGH)
-        {
-            if (gettimeofday(&ende,(struct timezone*)0))
-            {
-                printf("error\n");
-                exit(1);
-            }
-        }
-        sec = ende.tv_sec - start.tv_sec;
-        usec = ende.tv_usec - start.tv_usec;
-       	long double totaldiff = (double)sec + (double)usec/1000000.0;
-        demArgs->distance = ((totaldiff*34300.0)/2.0);*/
         demArgs->distance = measureDistance(READ_USO,TRIGGER_USO);
         semaphore_operation(semid,WUNLOCK);
         semaphore_operation(semid_2,WUNLOCK);
@@ -268,39 +240,6 @@ int main() {
     pinMode(GREEN,OUTPUT);
     pinMode(TRIGGER_USO,OUTPUT);
     pinMode(SNDOUT,SOFT_TONE_OUTPUT);
- /*   struct timeval _start, _ende;
-    long _sec, _usec;
-        digitalWrite(TRIGGER_USO,HIGH);
-        delayMicroseconds(10);
-        digitalWrite(TRIGGER_USO,LOW);
-        if (gettimeofday(&_start,(struct timezone*)0))
-        {
-            printf("error\n");
-            exit(1);
-        }
-	printf("%d\n start usec %ld\n",digitalRead(READ_USO),_start.tv_usec);
-        while (digitalRead(READ_USO) == LOW){
-            if (gettimeofday(&_start,(struct timezone*)0))
-            {
-                printf("error\n");
-                exit(1);
-            }
-        }
-	while (digitalRead(READ_USO) == HIGH){
-            if (gettimeofday(&_ende,(struct timezone*)0))
-            {
-                printf("error\n");
-                exit(1);
-            }
-	}
-	printf("END uSec %d\n",_ende.tv_usec);
-        _sec = _ende.tv_sec - _start.tv_sec;
-        _usec = _ende.tv_usec - _start.tv_usec; //_ende.tv_usec - _start.tv_usec;
-        long double _totaldiff = ((long double)_usec)/1000000.0;
-        //demArgs.distance = 100*((_usec/1000000.0)*340.29)/2;
-        demArgs.distance = (_totaldiff*34300)/2;
-	printf("Distance test %lf\n",demArgs.distance);
-*/
     measureDistance(READ_USO,TRIGGER_USO);
 	demArgs.alive=1;
     if (pthread_create(&readPIR,NULL,&p3_thread1,&demArgs)!=0)
