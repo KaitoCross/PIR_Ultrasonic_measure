@@ -30,6 +30,7 @@ static struct sembuf semaphore;
 static int semid;
 static int semid_2;//Zwischen P2 (writer) und reader P3 & P4
 static int semid_3;
+static int semid_4;
 
 static int init_semaphore (int *sema_id, short initval, int semkey) {
     /* Testen, ob das Semaphor bereits existiert */
@@ -119,12 +120,14 @@ void p3_thread1(struct argsForpthread *demArgs)
     {
         //semaphore_operation(semid_3,WLOCK);
         //semaphore_operation(semid,WLOCK);
+        //semaphore_operation(semid_4,LOCK);
         printf("THREAD1 LOCK\n");
         while (digitalRead(READ_PIR) != 1) {
             demArgs->detectedMove=0;
 	        delay(10);
         }
         demArgs->detectedMove=1;
+        //semaphore_operation(semid_4,UNLOCK);
         semaphore_operation(semid,WUNLOCK);
         semaphore_operation(semid_3,WUNLOCK);
         printf("MOVEMENT DETECTED\n");
@@ -141,7 +144,7 @@ void p3_thread2(struct argsForpthread * demArgs)
         semaphore_operation(semid,WLOCK);
         printf("THREAD2 S0 LOCK\n");
         demArgs->distance = measureDistance(READ_USO,TRIGGER_USO);
-        semaphore_operation(semid,WUNLOCK);
+        //semaphore_operation(semid,WUNLOCK);
         semaphore_operation(semid_2,WUNLOCK);
         printf("DISTANCE MEASURED! SemID2 : %d\n",semid_2);
     }
@@ -205,6 +208,7 @@ void killsems(int sig)
     semctl (semid, 0, IPC_RMID, 0);
     semctl (semid_2, 0, IPC_RMID, 0);
     semctl (semid_3, 0, IPC_RMID, 0);
+    semctl (semid_4, 0, IPC_RMID, 0);
     printf("Semaphores deleted");
     softToneWrite(SNDOUT,0);
 }
@@ -229,6 +233,11 @@ int main() {
         return EXIT_FAILURE;
     }
     res = init_semaphore(&semid_3,0,KEY+2);
+    if (res < 0) {
+        printf("ERROR CREATING SEMAPHORE");
+        return EXIT_FAILURE;
+    }
+    res = init_semaphore(&semid_4,1,KEY+3);
     if (res < 0) {
         printf("ERROR CREATING SEMAPHORE");
         return EXIT_FAILURE;
