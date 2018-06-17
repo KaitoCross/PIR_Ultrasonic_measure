@@ -64,11 +64,53 @@ static int semaphore_operation (int sem_id, short op) {
 
 struct argsForpthread
 {
-    double distance;
+    long double distance;
     short evaluationDone;
     short detectedMove;
     short alive;
 };
+
+long double measureDistance(short echopin, short triggerpin)
+{
+    struct timeval start, ende;
+    long sec, usec;
+
+    digitalWrite(triggerpin,1);
+    delayMicroseconds(10);
+    digitalWrite(triggerpin,0);
+    if (gettimeofday(&start,(struct timezone*)0))
+    {
+        printf("error\n");
+        exit(1);
+    }
+    printf("%d\n",digitalRead(echopin));
+    while (digitalRead(echopin) == 0)
+    {
+        if (gettimeofday(&start,(struct timezone*)0))
+        {
+            printf("error\n");
+            exit(1);
+        }
+    }
+    while (digitalRead(echopin)==HIGH)
+    {
+        if (gettimeofday(&ende,(struct timezone*)0))
+        {
+            printf("error\n");
+            exit(1);
+        }
+    }
+//}
+//	printf("START uSEC %ld\n",start.tv_usec);
+//	printf("END uSEC %ld\n",ende.tv_usec);
+    sec = ende.tv_sec - start.tv_sec;
+    usec = ende.tv_usec - start.tv_usec;
+    printf("DIFF in uSEC: %ld\n", usec);
+    long double totaldiff = (double)sec + (double)usec/1000000.0;
+    long double tdistance = /*100*((usec/1000000.0)*340.29)/2;*/ ((totaldiff*34300.0)/2);
+    printf("DISTANCE MEASURED! Distance: %lf\n",tdistance);
+    return tdistance;
+}
 
 void p3_thread1(struct argsForpthread *demArgs)
 {
@@ -99,7 +141,7 @@ void p3_thread2(struct argsForpthread * demArgs)
         printf("THREAD2 S2 LOCK\n");
         semaphore_operation(semid,WLOCK);
         printf("THREAD2 S0 LOCK\n");
-        digitalWrite(TRIGGER_USO,1);
+        /*digitalWrite(TRIGGER_USO,1);
         delay(10);
         digitalWrite(TRIGGER_USO,0);
         if (gettimeofday(&start,(struct timezone*)0))
@@ -115,7 +157,7 @@ void p3_thread2(struct argsForpthread * demArgs)
                 printf("error\n");
                 exit(1);
             }
-        }
+        }TRIGGER_USO
         while (digitalRead(READ_USO)==HIGH)
         {
             if (gettimeofday(&ende,(struct timezone*)0))
@@ -127,7 +169,8 @@ void p3_thread2(struct argsForpthread * demArgs)
         sec = ende.tv_sec - start.tv_sec;
         usec = ende.tv_usec - start.tv_usec;
        	long double totaldiff = (double)sec + (double)usec/1000000.0;
-        demArgs->distance = ((totaldiff*34300.0)/2.0);
+        demArgs->distance = ((totaldiff*34300.0)/2.0);*/
+        demArgs->distance = measureDistance(READ_USO,TRIGGER_USO);
         semaphore_operation(semid,WUNLOCK);
         semaphore_operation(semid_2,WUNLOCK);
         printf("DISTANCE MEASURED! SemID2 : %d\n",semid_2);
@@ -193,6 +236,7 @@ void killsems(int sig)
     softToneWrite(SNDOUT,0);
 }
 
+
 int main() {
     signal(SIGINT,killsems);
     struct argsForpthread demArgs;
@@ -224,7 +268,7 @@ int main() {
     pinMode(GREEN,OUTPUT);
     pinMode(TRIGGER_USO,OUTPUT);
     pinMode(SNDOUT,SOFT_TONE_OUTPUT);
-    struct timeval _start, _ende;
+ /*   struct timeval _start, _ende;
     long _sec, _usec;
         digitalWrite(TRIGGER_USO,HIGH);
         delayMicroseconds(10);
@@ -256,7 +300,8 @@ int main() {
         //demArgs.distance = 100*((_usec/1000000.0)*340.29)/2;
         demArgs.distance = (_totaldiff*34300)/2;
 	printf("Distance test %lf\n",demArgs.distance);
-
+*/
+    measureDistance(READ_USO,TRIGGER_USO);
 	demArgs.alive=1;
     if (pthread_create(&readPIR,NULL,&p3_thread1,&demArgs)!=0)
     {
