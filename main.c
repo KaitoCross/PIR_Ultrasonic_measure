@@ -12,13 +12,13 @@
 #include <zconf.h>
 #include <signal.h>
 
-#define RED 27
-#define YELLOW 28
+#define RED 0
+#define YELLOW 2
 #define GREEN 3
-#define READ_PIR 25
-#define READ_USO 7
-#define TRIGGER_USO 8
-#define SNDOUT 24
+#define READ_PIR 23
+#define READ_USO 21
+#define TRIGGER_USO 22
+#define SNDOUT
 #define WLOCK -2
 #define WUNLOCK 2
 #define KEY 1337
@@ -104,9 +104,8 @@ long double measureDistance(short echopin, short triggerpin)
             exit(1);
         }
     }
-//}
-	printf("START uSEC %ld\n",start.tv_usec);
-	printf("END uSEC %ld\n",ende.tv_usec);
+    printf("START uSEC %ld\n",start.tv_usec);
+    printf("END uSEC %ld\n",ende.tv_usec);
     sec = ende.tv_sec - start.tv_sec;
     usec = ende.tv_usec - start.tv_usec;
     printf("DIFF in uSEC: %ld\n", usec);
@@ -121,19 +120,15 @@ void p3_thread1(struct argsForpthread *demArgs)
     while(demArgs->alive)
     {
         semaphore_operation(semid_4,LOCK);
-        semaphore_operation(semid_3,UNLOCK);
         printf("THREAD1 LOCK\n");
         while (digitalRead(READ_PIR) != 1) {
             demArgs->detectedMove=0;
-	        //delay(10);
+            //delay(10);
         }
         demArgs->detectedMove=1;
         demArgs->calcDone=0;
-	if (demArgs->detectedMove)
-	{
         semaphore_operation(semid,UNLOCK);
         printf("MOVEMENT DETECTED\n");
-	}
     }
 }
 
@@ -141,23 +136,20 @@ void p3_thread2(struct argsForpthread * demArgs)
 {
     while(demArgs->alive)
     {
-//        while (demArgs->detectedMove) {
-            semaphore_operation(semid, LOCK);
-            semaphore_operation(semid_5, LOCK);
-            printf("MEASURING DISTANCE...\n");
-            demArgs->distance = measureDistance(READ_USO, TRIGGER_USO);
-            demArgs->calcDone = 1;
-            semaphore_operation(semid_5, UNLOCK);
-            semaphore_operation(semid_2, UNLOCK);
-            printf("T2 DISTANCE MEASURED!\n");
-//        }
+        semaphore_operation(semid, LOCK);
+        printf("MEASURING DISTANCE...\n");
+        demArgs->distance = measureDistance(READ_USO, TRIGGER_USO);
+        demArgs->calcDone = 1;
+        semaphore_operation(semid_3, UNLOCK);
+        semaphore_operation(semid_5, UNLOCK);
+        printf("T2 DISTANCE MEASURED!\n");
     }
 }
 
 void p3_thread3(struct argsForpthread *demArgs)
 {
     while(demArgs->alive) {
-        semaphore_operation(semid_2,LOCK);
+        semaphore_operation(semid_3,LOCK);
         printf("SETTING LEDS\n");
         digitalWrite(GREEN, 0);
         digitalWrite(YELLOW, 0);
@@ -194,8 +186,6 @@ void p3_thread4(struct argsForpthread *demArgs)
             printf("T4 worked, Distance: %lf\n",demArgs->distance);
         }
         softToneWrite(SNDOUT,0);
-        semaphore_operation(semid_5,UNLOCK);
-        semaphore_operation(semid_3,LOCK);
         semaphore_operation(semid_4,UNLOCK);
     }
 }
@@ -211,13 +201,17 @@ void killsems(int sig)
     semctl (semid_5, 0, IPC_RMID, 0);
     printf("Semaphores deleted");
     softToneWrite(SNDOUT,0);
+    digitalWrite(TRIGGER_USO,0);
+    digitalWrite(RED,0);
+    digitalWrite(GREEN,0);
+    digitalWrite(YELLOW,0);
 }
 
 
 int main() {
     signal(SIGINT,killsems);
     struct argsForpthread demArgs;
-    demArgs.distance=0.0;
+    demArgs.distance=500.0;
     demArgs.detectedMove=0;
     demArgs.evaluationDone=0;
     demArgs.alive=0;
@@ -256,8 +250,12 @@ int main() {
     pinMode(GREEN,OUTPUT);
     pinMode(TRIGGER_USO,OUTPUT);
     pinMode(SNDOUT,SOFT_TONE_OUTPUT);
+    pullUpDnControl(READ_PIR,PUD_OFF);
+    pullUpDnControl(READ_USO,PUD_OFF);
+    pullUpDnControl(TRIGGER_USO,PUD_OFF);
+    softToneCreate(SNDOUT);
     measureDistance(READ_USO,TRIGGER_USO);
-	demArgs.alive=1;
+    demArgs.alive=1;
     if (pthread_create(&readPIR,NULL,&p3_thread1,&demArgs)!=0)
     {
         printf("ERROR CREATING THREAD");
