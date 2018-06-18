@@ -9,6 +9,7 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <pthread.h>
+//#include <zconf.h>
 #include <signal.h>
 
 #define RED 0
@@ -18,6 +19,8 @@
 #define READ_USO 21
 #define TRIGGER_USO 22
 #define SNDOUT 25
+#define WLOCK -2
+#define WUNLOCK 2
 #define KEY 1337
 #define LOCK       -1
 #define UNLOCK      1
@@ -107,7 +110,7 @@ long double measureDistance(short echopin, short triggerpin)
     usec = ende.tv_usec - start.tv_usec;
     printf("DIFF in uSEC: %ld\n", usec);
     long double totaldiff = (double)sec + (double)usec/1000000.0;
-    long double tdistance = ((totaldiff*34300.0)/2);
+    long double tdistance = /*100*((usec/1000000.0)*340.29)/2;*/ ((totaldiff*34300.0)/2);
     printf("DISTANCE MEASURED! Distance: %lf\n",tdistance);
     return tdistance;
 }
